@@ -94,11 +94,24 @@ node10() {
 alias node='node10'
 
 alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/data --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
-alias npm10='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/data --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /data --user $(id -u):$(id -g) node:10-alpine npm'
+alias npm10='docker run --rm --interactive --tty --name="npm-container" --env="PARCEL_WORKERS=1" --volume "$PWD":/data --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /data --user $(id -u):$(id -g) node:10-alpine npm'
 alias npm='npm10'
 
-alias npx10='docker run --rm --interactive --tty --name="npx-container" --volume "$PWD":/data --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /data --user $(id -u):$(id -g) node:10-alpine npx'
+alias npx10='docker run --rm --interactive --tty --name="npx-container" --volume "$PWD":/data --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npx'
 alias npx='npx10'
+
+parcel10() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    local hmr_port=$((port + 1))
+    shift 1
+    docker run --rm --interactive --tty --name="parcel-container-$port" --env="PORT=$port" --env="PARCEL_WORKERS=1" --publish $port:$port --publish $hmr_port:$hmr_port --network="local-network" --volume "$PWD":/data --volume ~/.cache:/.cache --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine parcel --port $port --hmr-port $hmr_port "$@"
+  else
+    echo "Usage: parcel10 <port> <any other args>"
+    echo "Example: parcel10 8000 src/index.html"
+  fi
+}
+alias parcel='parcel10'
 
 yarn10() {
   if [ "$#" -ge 2 ]; then
