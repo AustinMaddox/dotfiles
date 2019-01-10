@@ -14,8 +14,8 @@ alias vim='vi'
 
 # AWS
 #####
-alias aws='docker run --rm --interactive --tty --volume ~/.aws:/.aws --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine aws'
-alias awsenv='aws ssm send-command --cli-input-json'
+alias aws='docker run --rm --interactive --tty --volume ~/.aws:/.aws --user $(id -u):$(id -g) --workdir="/.aws" austinmaddox/docker-php:7.2-alpine aws'
+alias awsenv='aws ssm send-command --cli-input-json="file://aws-ssm-env-rico.json" --document-name="AWS-RunShellScript" --profile="rico" --region="us-west-2"'
 alias ecr='aws ecr get-login --region="us-west-2" --no-include-email'
 alias ssh_dev='ssh -i ~/.ssh/klowd-dev.pem -l ubuntu'
 alias ssh_prod='ssh -i ~/.ssh/klowd-prod.pem -l ubuntu'
@@ -65,17 +65,17 @@ alias fixFilesystemDebianLaravel='sudo sh -c "chown -R $(whoami):33 $PWD && find
 
 # Node
 ######
-alias gulp6='docker run --rm --interactive --tty --name="gulp-container" --volume "$PWD":/data --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine gulp'
+alias gulp6='docker run --rm --interactive --tty --name="gulp-container" --volume "$PWD":/docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine gulp'
 alias gulp='gulp6'
 
-alias gulp-drupal6='docker run --rm --interactive --tty --name="gulp-drupal-container" --volume $(dirname "$PWD"):/data --user $(id -u):$(id -g) --workdir /data/.npm austinmaddox/docker-node:6-alpine gulp'
+alias gulp-drupal6='docker run --rm --interactive --tty --name="gulp-drupal-container" --volume $(dirname "$PWD"):/docker-container-workdir --user $(id -u):$(id -g) --workdir /docker-container-workdir/.npm austinmaddox/docker-node:6-alpine gulp'
 alias gulp-drupal='gulp-drupal6'
 
 node6() {
   if [ "$#" -ge 2 ]; then
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/data --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine node "$@"
+    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine node "$@"
   else
     echo "Usage: node6 <port> <file>"
     echo "Example: node6 8000 index.js"
@@ -85,7 +85,7 @@ node10() {
   if [ "$#" -ge 2 ]; then
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/data --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine node "$@"
+    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine node "$@"
   else
     echo "Usage: node10 <port> <file>"
     echo "Example: node10 8000 index.js"
@@ -93,11 +93,11 @@ node10() {
 }
 alias node='node10'
 
-alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/data --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
-alias npm10='docker run --rm --interactive --tty --name="npm-container" --env="PARCEL_WORKERS=1" --volume "$PWD":/data --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /data --user $(id -u):$(id -g) node:10-alpine npm'
+alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
+alias npm10='docker run --rm --interactive --tty --name="npm-container" --env="PARCEL_WORKERS=1" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npm'
 alias npm='npm10'
 
-alias npx10='docker run --rm --interactive --tty --name="npx-container" --volume "$PWD":/data --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npx'
+alias npx10='docker run --rm --interactive --tty --name="npx-container" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npx'
 alias npx='npx10'
 
 parcel10() {
@@ -105,7 +105,7 @@ parcel10() {
     local port="${1}"
     local hmr_port=$((port + 1))
     shift 1
-    docker run --rm --interactive --tty --name="parcel-container-$port" --env="PORT=$port" --env="PARCEL_WORKERS=1" --publish $port:$port --publish $hmr_port:$hmr_port --network="local-network" --volume "$PWD":/data --volume ~/.cache:/.cache --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine parcel --port $port --hmr-port $hmr_port "$@"
+    docker run --rm --interactive --tty --name="parcel-container-$port" --env="PORT=$port" --env="PARCEL_WORKERS=1" --publish $port:$port --publish $hmr_port:$hmr_port --network="local-network" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine parcel --port $port --hmr-port $hmr_port "$@"
   else
     echo "Usage: parcel10 <port> <any other args>"
     echo "Example: parcel10 8000 src/index.html"
@@ -118,11 +118,11 @@ yarn10() {
     # Note: the ~/.yarnrc file must exist first or else Docker will mount and create it as a directory. Run `touch ~/.yarnrc` first.
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="yarn-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/data --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /data --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine yarn "$@"
+    docker run --rm --interactive --tty --name="yarn-container-$port" --privileged="true" --env="MANUAL_SEED=true" --env="DOCKER_HOST=host.docker.internal" --env="NODE_ENV=LOCAL_DOCKER" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine yarn --ignore-optional "$@"
   else
     echo "Usage: yarn10 <port> <file>"
     echo "Example: yarn10 8000 index.js"
-    echo "Example: yarn10 8000 add prettier"
+    echo "Example: yarn10 8000 add prettier --dev"
   fi
 }
 alias yarn='yarn10'
@@ -130,9 +130,9 @@ alias yarn='yarn10'
 # PHP
 #####
 alias art='php artisan'
-alias composer='docker run --rm --interactive --tty --name="composer-container" --volume ~/.composer:/.composer --volume "$PWD":/usr/src/myapp --workdir /usr/src/myapp --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine composer'
-alias php71='docker run --rm --interactive --tty --name="php71-container" --volume "$PWD":/usr/src/myapp --workdir /usr/src/myapp --user $(id -u):$(id -g) austinmaddox/docker-php:7.1-alpine php'
-alias php72='docker run --rm --interactive --tty --name="php72-container" --volume "$PWD":/usr/src/myapp --workdir /usr/src/myapp --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine php'
+alias composer='docker run --rm --interactive --tty --name="composer-container" --volume ~/.composer:/.composer --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine composer'
+alias php71='docker run --rm --interactive --tty --name="php71-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.1-alpine php'
+alias php72='docker run --rm --interactive --tty --name="php72-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine php'
 alias php='php72'
 alias pv='php -v'
 
@@ -141,7 +141,7 @@ phpserver() {
   local port="${1:-8000}"
   local path="${2:-.}"
   (sleep 1 && open "http://localhost:${port}")&
-  docker run --rm --interactive --tty --name="php-built-in-development-web-server-$port" --publish $port:$port --network="local-network" --volume "$PWD":/usr/src/myapp --workdir /usr/src/myapp --user $(id -u):$(id -g) php:7.2-alpine php -S 0.0.0.0:$port -t $path
+  docker run --rm --interactive --tty --name="php-built-in-development-web-server-$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) php:7.2-alpine php -S 0.0.0.0:$port -t $path
 }
 alias phpunit='php vendor/bin/phpunit -d memory_limit=2048M'
 alias p='phpunit'
