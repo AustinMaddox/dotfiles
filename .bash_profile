@@ -2,7 +2,7 @@ PATH=$PATH:/usr/local/Cellar/php@7.1/7.1.22/bin/
 
 # Misc
 ######
-alias ab='docker run --rm --interactive --tty --user $(id -u):$(id -g) austinmaddox/docker-apache-ab:master'
+alias ab='docker run --rm --interactive --tty --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-apache-ab:master'
 alias cdd='cd ~/p/'
 alias ea='vi ~/.bash_profile'
 alias ll='ls -l -A -G -H'
@@ -22,13 +22,13 @@ alias ssh_prod='ssh -i ~/.ssh/klowd-prod.pem -l ubuntu'
 
 # Docker
 ########
-alias dcu='echo "WARNING!!! Standing up stack without fixing file permissions." && docker-compose up -d && docker ps -a'
+alias dcl='docker-compose logs'
+alias dcr='docker-compose stop; docker-compose rm -vf; docker ps -a'
+alias dcu='docker-compose up'
 alias dcuad='docker-compose up -d && fixFilesystemAlpineDrupal && docker ps -a'
 alias dcudd='docker-compose up -d && fixFilesystemDebianDrupal && docker ps -a'
 alias dcual='docker-compose up -d && fixFilesystemAlpineLaravel && docker ps -a'
 alias dcudl='docker-compose up -d && fixFilesystemDebianLaravel && docker ps -a'
-alias dcl='docker-compose logs'
-alias dcr='docker-compose stop; docker-compose rm -vf; docker ps -a'
 alias de='docker exec --interactive --tty'
 alias di='docker images'
 #alias diclean='docker images --filter dangling=true -q | xargs -n1 -r docker rmi'
@@ -65,6 +65,18 @@ alias fixFilesystemDebianLaravel='sudo sh -c "chown -R $(whoami):33 $PWD && find
 
 # Node
 ######
+gatsby10() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="gatsby-container-$port" --env="PARCEL_WORKERS=1" --env="PORT=$port" --publish $port:$port --network="local-network" --volume ~/.config:/.config --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine gatsby "$@"
+  else
+    echo "Usage: gatsby10 <port> <commands>"
+    echo "Example: gatsby10 8000 develop"
+  fi
+}
+alias gatsby='gatsby10'
+
 alias gulp6='docker run --rm --interactive --tty --name="gulp-container" --volume "$PWD":/docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine gulp'
 alias gulp='gulp6'
 
@@ -94,10 +106,28 @@ node10() {
 alias node='node10'
 
 alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
-alias npm10='docker run --rm --interactive --tty --name="npm-container" --env="PARCEL_WORKERS=1" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npm'
+npm10() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="npm-container-$port" --env="PORT=$port" --publish $port:$port --publish 9229:9229 --network="local-network" --volume ~/.config:/.config --volume ~/.gitconfig:/.gitconfig --volume ~/.npm:/.npm --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npm "$@"
+  else
+    echo "Usage: npm10 <port> <commands>"
+    echo "Example: npm10 8000 run start"
+  fi
+}
 alias npm='npm10'
 
-alias npx10='docker run --rm --interactive --tty --name="npx-container" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npx'
+npx10() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="npx-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npx "$@"
+  else
+    echo "Usage: npx10 <port> <commands>"
+    echo "Example: npx10 8000 gatsby develop"
+  fi
+}
 alias npx='npx10'
 
 parcel10() {
@@ -118,11 +148,11 @@ yarn10() {
     # Note: the ~/.yarnrc file must exist first or else Docker will mount and create it as a directory. Run `touch ~/.yarnrc` first.
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="yarn-container-$port" --privileged="true" --env="MANUAL_SEED=true" --env="DOCKER_HOST=host.docker.internal" --env="NODE_ENV=LOCAL_DOCKER" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine yarn --ignore-optional "$@"
+    docker run --rm --interactive --tty --name="yarn-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine yarn --ignore-optional "$@"
   else
     echo "Usage: yarn10 <port> <file>"
     echo "Example: yarn10 8000 index.js"
-    echo "Example: yarn10 8000 add prettier --dev"
+    echo "Example: yarn10 8888 add prettier --dev"
   fi
 }
 alias yarn='yarn10'
