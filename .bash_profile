@@ -3,7 +3,8 @@ PATH=$PATH:/usr/local/Cellar/php@7.1/7.1.22/bin/
 # Misc
 ######
 alias ab='docker run --rm --interactive --tty --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-apache-ab:master'
-alias cdd='cd ~/p/'
+alias cdd='cd ~/p/Klowd/'
+alias consul='/etc/consul.d/consul agent -config-dir=/etc/consul.d/'
 alias ea='vi ~/.bash_profile'
 alias ll='ls -l -A -G -H'
 alias myip='ifconfig | grep "inet " | grep -v "127.0.0.1"'
@@ -12,9 +13,19 @@ alias update-postman-on-linux='wget https://dl.pstmn.io/download/latest/linux64 
 alias update-postman-on-mac='curl https://dl.pstmn.io/download/latest/osx -o postman.zip && unzip -o postman.zip && cp -rf Postman.app /Applications'
 alias vim='vi'
 
+watch() {
+  while :; 
+    do 
+    clear
+    echo "Watching $@"
+    "$@"
+    sleep 1
+  done
+}
+
 # AWS
 #####
-alias aws='docker run --rm --interactive --tty --volume ~/.aws:/.aws --user $(id -u):$(id -g) --workdir="/.aws" austinmaddox/docker-php:7.2-alpine aws'
+alias aws='docker run --rm --interactive --tty --name="aws-cli-container" --volume ~/.aws:/.aws --user $(id -u):$(id -g) --workdir="/.aws" austinmaddox/docker-php:7.2-alpine aws'
 alias awsenv='aws ssm send-command --cli-input-json="file://aws-ssm-env-rico.json" --document-name="AWS-RunShellScript" --profile="rico" --region="us-west-2"'
 alias ecr='aws ecr get-login --region="us-west-2" --no-include-email'
 alias ssh_dev='ssh -i ~/.ssh/klowd-dev.pem -l ubuntu'
@@ -22,9 +33,13 @@ alias ssh_prod='ssh -i ~/.ssh/klowd-prod.pem -l ubuntu'
 
 # Docker
 ########
+alias dcb='docker-compose build'
+alias dcd='docker-compose down; docker ps -a'
 alias dcl='docker-compose logs'
-alias dcr='docker-compose stop; docker-compose rm -vf; docker ps -a'
+alias dcp='docker container prune'
+alias dcr='echo "Hey! You should use dcd instead."'
 alias dcu='docker-compose up'
+alias dcs='docker-compose stop'
 alias dcuad='docker-compose up -d && fixFilesystemAlpineDrupal && docker ps -a'
 alias dcudd='docker-compose up -d && fixFilesystemDebianDrupal && docker ps -a'
 alias dcual='docker-compose up -d && fixFilesystemAlpineLaravel && docker ps -a'
@@ -34,7 +49,7 @@ alias di='docker images'
 #alias diclean='docker images --filter dangling=true -q | xargs -n1 -r docker rmi'
 alias diclean='docker rmi $(docker images -q -f dangling=true)'
 alias dic='diclean'
-alias dl='docker logs -f --tail 1'
+alias dl='docker logs --details --follow --tail 10'
 alias dm='screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty'
 alias dn='docker network'
 alias dnls='docker network ls'
@@ -97,7 +112,7 @@ node10() {
   if [ "$#" -ge 2 ]; then
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine node "$@"
+    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:10.16.0-stretch node "$@"
   else
     echo "Usage: node10 <port> <file>"
     echo "Example: node10 8000 index.js"
@@ -108,9 +123,10 @@ alias node='node10'
 alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
 npm10() {
   if [ "$#" -ge 2 ]; then
+    # Note: the ~/.npmrc file must exist first or else Docker will mount and create it as a directory. Run `touch ~/.npmrc` first.
     local port="${1}"
     shift 1
-    docker run --rm --interactive --tty --name="npm-container-$port" --env="PORT=$port" --publish $port:$port --publish 9229:9229 --network="local-network" --volume ~/.config:/.config --volume ~/.gitconfig:/.gitconfig --volume ~/.npm:/.npm --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:10-alpine npm "$@"
+    docker run --rm --interactive --tty --name="npm-container-$port" --env="PORT=$port" --env="NPM_TOKEN=blank" --publish $port:$port --network="local-network" --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.gitconfig:/.gitconfig --volume ~/.npm:/.npm --volume ~/.npmrc:/.npmrc --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:10.16.0-stretch npm "$@"
   else
     echo "Usage: npm10 <port> <commands>"
     echo "Example: npm10 8000 run start"
@@ -160,9 +176,9 @@ alias yarn='yarn10'
 # PHP
 #####
 alias art='php artisan'
-alias composer='docker run --rm --interactive --tty --name="composer-container" --volume ~/.composer:/.composer --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine composer'
-alias php71='docker run --rm --interactive --tty --name="php71-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.1-alpine php'
-alias php72='docker run --rm --interactive --tty --name="php72-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine php'
+alias composer='docker run --rm --interactive --tty --name="composer-container" --network="local-network" --volume ~/.composer:/.composer --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) composer:1.9.1 composer'
+alias php71='docker run --rm --interactive --tty --name="php71-container" --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.1-alpine php'
+alias php72='docker run --rm --interactive --tty --name="php72-container" --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine php'
 alias php='php72'
 alias pv='php -v'
 
@@ -184,3 +200,8 @@ pythonserver() {
   (sleep 1 && open "http://localhost:${port}")&
   python -m SimpleHTTPServer $port
 }
+
+# Terraform
+###########
+alias terraform='docker run --rm --interactive --tty --name="terraform-container" --env="AWS_SDK_LOAD_CONFIG=1" --env="AWS_SHARED_CREDENTIALS_FILE=/root/.aws/credentials" --volume ~/.ssh/id_rsa:/root/.ssh/id_rsa --volume ~/.terraformrc:/root/.terraformrc --volume "$PWD":/docker-container-workdir --volume ~/p/Klowd/terraform-aws-mfa-tool/.aws/freemanio-datalake-dev/credentials:/root/.aws/credentials --workdir="/docker-container-workdir" hashicorp/terraform:0.12.18'
+alias tf='terraform'
