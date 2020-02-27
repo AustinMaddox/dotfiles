@@ -118,7 +118,17 @@ node10() {
     echo "Example: node10 8000 index.js"
   fi
 }
-alias node='node10'
+node12() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:12.16.0-stretch node "$@"
+  else
+    echo "Usage: node12 <port> <file>"
+    echo "Example: node12 8888 index.js"
+  fi
+}
+alias node='node12'
 
 alias npm6='docker run --rm --interactive --tty --name="npm-container" --volume "$PWD":/docker-container-workdir --volume ~/.config:/.config --volume ~/.npm:/.npm --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-node:6-alpine npm'
 npm10() {
@@ -132,7 +142,18 @@ npm10() {
     echo "Example: npm10 8000 run start"
   fi
 }
-alias npm='npm10'
+npm12() {
+  if [ "$#" -ge 2 ]; then
+    # Note: the ~/.npmrc file must exist first or else Docker will mount and create it as a directory. Run `touch ~/.npmrc` first.
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="npm-container-$port" --env="PORT=$port" --env="NPM_TOKEN=blank" --publish $port:$port --network="local-network" --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.gitconfig:/.gitconfig --volume ~/.npm:/.npm --volume ~/.npmrc:/.npmrc --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:12.16.0-stretch npm "$@"
+  else
+    echo "Usage: npm12 <port> <commands>"
+    echo "Example: npm12 8888 run start"
+  fi
+}
+alias npm='npm12'
 
 npx10() {
   if [ "$#" -ge 2 ]; then
@@ -144,7 +165,17 @@ npx10() {
     echo "Example: npx10 8000 gatsby develop"
   fi
 }
-alias npx='npx10'
+npx12() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="npx-container-$port" --env="PORT=$port" --publish $port:$port --network="local-network" --volume ~/.cache:/.cache --volume ~/.config:/.config --volume ~/.npm:/.npm --volume ~/.yarn:/.yarn --volume ~/.yarnrc:/.yarnrc --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:12.16.0-stretch npx "$@"
+  else
+    echo "Usage: npx12 <port> <commands>"
+    echo "Example: npx12 8888 gatsby develop"
+  fi
+}
+alias npx='npx12'
 
 parcel10() {
   if [ "$#" -ge 2 ]; then
