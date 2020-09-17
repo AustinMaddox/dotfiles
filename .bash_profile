@@ -25,7 +25,7 @@ watch() {
 
 # AWS
 #####
-alias aws='docker run --rm --interactive --tty --name="aws-cli-container" --volume ~/.aws:/.aws --user $(id -u):$(id -g) --workdir="/.aws" austinmaddox/docker-php:7.2-alpine aws'
+alias aws='docker run --rm --interactive --tty --name="aws-cli-v2-container" --volume ~/.aws:/root/.aws --volume $(pwd):/aws amazon/aws-cli'
 alias awsenv='aws ssm send-command --cli-input-json="file://aws-ssm-env-rico.json" --document-name="AWS-RunShellScript" --profile="rico" --region="us-west-2"'
 alias ecr='aws ecr get-login --region="us-west-2" --no-include-email'
 alias ssh_dev='ssh -i ~/.ssh/klowd-dev.pem -l ubuntu'
@@ -37,7 +37,7 @@ alias dcb='docker-compose build'
 alias dcd='docker-compose down; docker ps -a'
 alias dcl='docker-compose logs'
 alias dcp='docker container prune'
-alias dcr='echo "Hey! You should use dcd instead."'
+alias dcr='docker-compose run --rm --service-ports'
 alias dcu='docker-compose up'
 alias dcs='docker-compose stop'
 alias dcuad='docker-compose up -d && fixFilesystemAlpineDrupal && docker ps -a'
@@ -236,3 +236,5 @@ pythonserver() {
 ###########
 alias terraform='docker run --rm --interactive --tty --name="terraform-container" --env="AWS_SDK_LOAD_CONFIG=1" --env="AWS_SHARED_CREDENTIALS_FILE=/root/.aws/credentials" --volume ~/.ssh/id_rsa:/root/.ssh/id_rsa --volume ~/.terraformrc:/root/.terraformrc --volume "$PWD":/docker-container-workdir --volume ~/p/Klowd/terraform-aws-mfa-tool/.aws/freemanio-datalake-dev/credentials:/root/.aws/credentials --workdir="/docker-container-workdir" hashicorp/terraform:0.12.18'
 alias tf='terraform'
+
+alias wscat='docker run -it --rm joshgubler/wscat'
