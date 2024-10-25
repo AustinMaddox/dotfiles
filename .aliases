@@ -1,0 +1,100 @@
+# Misc
+######
+alias ab='docker run --rm --interactive --tty --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-apache-ab:master'
+alias cdd='cd ~/p/'
+alias ll='ls -l -A -G -H'
+alias myip='ifconfig | grep "inet " | grep -v "127.0.0.1"'
+alias reloadshell='source ~/.zshrc'
+alias vim='vi'
+alias wscat='docker run -it --rm joshgubler/wscat'
+
+watch() {
+  while :; 
+    do 
+    clear
+    echo "Watching $@"
+    "$@"
+    sleep 1
+  done
+}
+
+# AWS
+#####
+alias aws='docker run --rm --interactive --tty --name="aws-cli-v2-container" --volume ~/.aws:/root/.aws --volume $(pwd):/aws amazon/aws-cli'
+alias ecr='aws ecr get-login --region="us-west-2" --no-include-email'
+
+# Docker
+########
+alias dcb='docker-compose build'
+alias dcd='docker-compose down; docker ps -a'
+alias dcl='docker-compose logs'
+alias dcp='docker container prune'
+alias dcr='docker-compose run --rm --service-ports'
+alias dcu='docker-compose up'
+alias dcs='docker-compose stop'
+alias de='docker exec --interactive --tty'
+alias di='docker images'
+#alias diclean='docker images --filter dangling=true -q | xargs -n1 -r docker rmi'
+alias diclean='docker rmi $(docker images -q -f dangling=true)'
+alias dic='diclean'
+alias dl='docker logs --details --follow --tail 10'
+alias dm='screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty'
+alias dn='docker network'
+alias dnls='docker network ls'
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias dsp='docker system prune'
+alias dv='docker volume'
+alias dvls='docker volume ls'
+alias dstop='docker stop $(docker ps -a -q) && dpsa'
+alias teardown='dstop && exit'
+
+# Git
+#####
+alias ga='git add'
+alias gaa='git add .'
+alias gc='git commit -m'
+alias gs='git status'
+
+# Node
+######
+node12() {
+  if [ "$#" -ge 2 ]; then
+    local port="${1}"
+    shift 1
+    docker run --rm --interactive --tty --name="node-js-container-$port" --env="PORT=$port" --publish $port:$port --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) node:12.16.0-stretch node "$@"
+  else
+    echo "Usage: node12 <port> <file>"
+    echo "Example: node12 8888 index.js"
+  fi
+}
+alias node='node12'
+
+# PHP
+#####
+alias art='php artisan'
+alias composer='docker run --rm --interactive --tty --name="composer-container" --volume ~/.composer:/.composer --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) composer:1.9.1 composer'
+alias php71='docker run --rm --interactive --tty --name="php71-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.1-alpine php'
+alias php72='docker run --rm --interactive --tty --name="php72-container" --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) austinmaddox/docker-php:7.2-alpine php'
+alias php='php72'
+alias pv='php -v'
+
+# phpserver 8000 public
+phpserver() {
+  local port="${1:-8000}"
+  local path="${2:-.}"
+  (sleep 1 && open "http://localhost:${port}")&
+  docker run --rm --interactive --tty --name="php-built-in-development-web-server-$port" --publish $port:$port --volume "$PWD":/docker-container-workdir --workdir /docker-container-workdir --user $(id -u):$(id -g) php:7.2-alpine php -S 0.0.0.0:$port -t $path
+}
+alias phpunit='php vendor/bin/phpunit -d memory_limit=2048M'
+alias p='phpunit'
+alias pf='phpunit --filter'
+
+# Python
+########
+pythonserver() {
+  local port="${1:-8000}"
+  (sleep 1 && open "http://localhost:${port}")&
+  python -m SimpleHTTPServer $port
+}
+
